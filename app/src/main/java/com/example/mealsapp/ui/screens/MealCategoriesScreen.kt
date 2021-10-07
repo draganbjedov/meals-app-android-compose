@@ -27,16 +27,19 @@ import com.example.mealsapp.viewmodel.MealCategoriesViewModel
 
 @Composable
 @ExperimentalCoilApi
-fun MealCategoriesScreen(viewModel: MealCategoriesViewModel = viewModel()) {
+fun MealCategoriesScreen(
+    viewModel: MealCategoriesViewModel = viewModel(),
+    onClick: (id: String) -> Unit,
+) {
     val categories: List<Category> by viewModel.categories.observeAsState(listOf())
     LazyColumn(contentPadding = PaddingValues(16.dp)) {
-        items(categories) { MealCategory(category = it) }
+        items(categories) { MealCategory(category = it, onClick = onClick) }
     }
 }
 
 @Composable
 @ExperimentalCoilApi
-fun MealCategory(category: Category) {
+fun MealCategory(category: Category, onClick: (id: String) -> Unit) {
     var isExpanded by remember { mutableStateOf(false) }
     Card(
         shape = RoundedCornerShape(8.dp),
@@ -44,6 +47,7 @@ fun MealCategory(category: Category) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp)
+            .clickable { onClick(category.id) }
     ) {
         Column(
             modifier = Modifier.animateContentSize()

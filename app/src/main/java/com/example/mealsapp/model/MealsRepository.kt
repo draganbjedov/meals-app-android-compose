@@ -1,11 +1,10 @@
 package com.example.mealsapp.model
 
 import com.example.mealsapp.model.api.MealsService
-import com.example.mealsapp.model.response.CategoriesResponse
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class MealsRepository {
+class MealsRepository private constructor() {
 
     private val service = Retrofit.Builder()
         .baseUrl("https://www.themealdb.com/api/json/v1/1/")
@@ -13,7 +12,29 @@ class MealsRepository {
         .build()
         .create(MealsService::class.java)
 
-    suspend fun getCategories(): CategoriesResponse {
-        return service.getCategories()
+    private var cachedCategories = listOf<Category>()
+
+    suspend fun getCategories(): List<Category> {
+        val response = service.getCategories()
+        cachedCategories = response.categories
+        return cachedCategories
+    }
+
+    fun getCategory(id: String): Category {
+        return cachedCategories.first { it.id == id }
+    }
+
+    companion object {
+        @Volatile
+        private var instance: MealsRepository? = null
+
+        fun getInstance(): MealsRepository {
+            synchronized(this) {
+                if (instance == null) {
+                    instance = MealsRepository()
+                }
+                return instance as MealsRepository
+            }
+        }
     }
 }

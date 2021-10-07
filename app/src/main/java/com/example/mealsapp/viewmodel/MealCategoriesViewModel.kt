@@ -11,9 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MealCategoriesViewModel(
-    private val repository: MealsRepository = MealsRepository(),
-) : ViewModel() {
+class MealCategoriesViewModel : ViewModel() {
 
     private val _categories = MutableLiveData<List<Category>>(listOf())
 
@@ -23,9 +21,9 @@ class MealCategoriesViewModel(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 Log.i("MEALS_APP", "Sending request...")
-                val response = repository.getCategories()
+                val categories = MealsRepository.getInstance().getCategories()
                 Log.i("MEALS_APP", "Response received")
-                _categories.postValue(response.categories)
+                _categories.postValue(categories)
             }
         }
     }
