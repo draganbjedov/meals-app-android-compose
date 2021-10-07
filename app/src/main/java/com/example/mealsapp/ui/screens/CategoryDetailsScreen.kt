@@ -1,28 +1,30 @@
 package com.example.mealsapp.ui.screens
 
-import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import coil.transform.RoundedCornersTransformation
 import com.example.mealsapp.viewmodel.CategoryDetailsViewModel
+import java.lang.Float.min
 
 @Composable
 @ExperimentalCoilApi
@@ -31,58 +33,60 @@ fun CategoryDetailsScreen(
 ) {
     val category = viewModel.category
 
-    var imageState by remember { mutableStateOf(ImageState.Normal) }
-    val transition = updateTransition(targetState = imageState, label = "imageState")
+    val scrollState = rememberLazyListState()
+    val offset = min(1f, 1f - (scrollState.firstVisibleItemScrollOffset / 600f + scrollState.firstVisibleItemIndex))
+    val imageSize by animateDpAsState(targetValue = max(60.dp, 150.dp * offset))
 
-    val imageSize: Dp by transition.animateDp(targetValueByState = { it.size }, label = "size")
-    val borderColor: Color by transition.animateColor(targetValueByState = { it.color }, label = "borderColor")
-    val borderWidth: Dp by transition.animateDp(targetValueByState = { it.borderWidth }, label = "borderWidth")
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Surface(
+        color = MaterialTheme.colors.background
     ) {
-        Card(
-            modifier = Modifier.padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(width = borderWidth, color = borderColor),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Image(
-                painter = rememberImagePainter(
-                    data = category.imageUrl,
-                    builder = {
-                        crossfade(true)
-                        transformations(RoundedCornersTransformation())
+            Surface(elevation = 4.dp) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Card(
+                        modifier = Modifier.padding(16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(width = 3.dp, color = Color.Green),
+                    ) {
+                        Image(
+                            painter = rememberImagePainter(
+                                data = category.imageUrl,
+                                builder = {
+                                    crossfade(true)
+                                    transformations(RoundedCornersTransformation())
+                                }
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(imageSize)
+                        )
                     }
-                ),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(imageSize)
-            )
-        }
-        Text(
-            text = category.name,
-            style = MaterialTheme.typography.h6,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-        )
-        Button(
-            modifier = Modifier.padding(16.dp),
-            onClick = {
-                imageState =
-                    if (imageState == ImageState.Normal) ImageState.Expanded else ImageState.Normal
+                    Text(
+                        text = category.name,
+                        style = MaterialTheme.typography.h6,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                    )
+                }
             }
-        ) {
-            Text(text = if (imageState == ImageState.Expanded) "Zoom out" else "Zoom in")
-        }
-        CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-            Text(
-                text = category.description,
-                style = MaterialTheme.typography.subtitle2,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.padding(16.dp)
-            )
+            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
+                Text(
+                    text = category.description,
+                    style = MaterialTheme.typography.subtitle2,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            val dummyContentList = (0..100).map { "Dummy content $it" }
+            LazyColumn(state = scrollState) {
+                items(dummyContentList) {
+                    Text(text = it, modifier = Modifier.padding(16.dp))
+                }
+            }
         }
     }
 }
