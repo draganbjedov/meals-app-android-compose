@@ -1,19 +1,17 @@
 package com.example.mealsapp.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.annotation.ExperimentalCoilApi
@@ -27,6 +25,9 @@ fun CategoryDetailsScreen(
     viewModel: CategoryDetailsViewModel = viewModel(),
 ) {
     val category = viewModel.category
+    var isExpanded by remember { mutableStateOf(false) }
+    val imageSize: Dp by animateDpAsState(targetValue = if (isExpanded) 200.dp else 100.dp)
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -40,7 +41,7 @@ fun CategoryDetailsScreen(
             ),
             contentDescription = null,
             modifier = Modifier
-                .size(200.dp)
+                .size(imageSize)
                 .padding(16.dp)
         )
         Text(
@@ -51,6 +52,12 @@ fun CategoryDetailsScreen(
                 .padding(16.dp)
                 .fillMaxWidth(),
         )
+        Button(
+            modifier = Modifier.padding(16.dp),
+            onClick = { isExpanded = !isExpanded }
+        ) {
+            Text(text = if (isExpanded) "Zoom out" else "Zoom in")
+        }
         CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
             Text(
                 text = category.description,
