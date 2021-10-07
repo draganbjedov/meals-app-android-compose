@@ -1,15 +1,20 @@
 package com.example.mealsapp.ui.screens
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -25,25 +30,35 @@ fun CategoryDetailsScreen(
     viewModel: CategoryDetailsViewModel = viewModel(),
 ) {
     val category = viewModel.category
-    var isExpanded by remember { mutableStateOf(false) }
-    val imageSize: Dp by animateDpAsState(targetValue = if (isExpanded) 200.dp else 100.dp)
+
+    var imageState by remember { mutableStateOf(ImageState.Normal) }
+    val transition = updateTransition(targetState = imageState, label = "imageState")
+
+    val imageSize: Dp by transition.animateDp(targetValueByState = { it.size }, label = "size")
+    val borderColor: Color by transition.animateColor(targetValueByState = { it.color }, label = "borderColor")
+    val borderWidth: Dp by transition.animateDp(targetValueByState = { it.borderWidth }, label = "borderWidth")
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            painter = rememberImagePainter(
-                data = category.imageUrl,
-                builder = {
-                    crossfade(true)
-                    transformations(RoundedCornersTransformation())
-                }
-            ),
-            contentDescription = null,
-            modifier = Modifier
-                .size(imageSize)
-                .padding(16.dp)
-        )
+        Card(
+            modifier = Modifier.padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(width = borderWidth, color = borderColor),
+        ) {
+            Image(
+                painter = rememberImagePainter(
+                    data = category.imageUrl,
+                    builder = {
+                        crossfade(true)
+                        transformations(RoundedCornersTransformation())
+                    }
+                ),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(imageSize)
+            )
+        }
         Text(
             text = category.name,
             style = MaterialTheme.typography.h6,
@@ -54,9 +69,12 @@ fun CategoryDetailsScreen(
         )
         Button(
             modifier = Modifier.padding(16.dp),
-            onClick = { isExpanded = !isExpanded }
+            onClick = {
+                imageState =
+                    if (imageState == ImageState.Normal) ImageState.Expanded else ImageState.Normal
+            }
         ) {
-            Text(text = if (isExpanded) "Zoom out" else "Zoom in")
+            Text(text = if (imageState == ImageState.Expanded) "Zoom out" else "Zoom in")
         }
         CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
             Text(
@@ -67,4 +85,9 @@ fun CategoryDetailsScreen(
             )
         }
     }
+}
+
+enum class ImageState(val color: Color, val size: Dp, val borderWidth: Dp) {
+    Normal(Color.Magenta, 120.dp, 3.dp),
+    Expanded(Color.Green, 200.dp, 6.dp),
 }
